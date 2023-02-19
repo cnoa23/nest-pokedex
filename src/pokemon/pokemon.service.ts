@@ -6,11 +6,8 @@ import { Pokemon } from './entities/pokemon.entity';
 
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
-import {
-  BadRequestException,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common/exceptions';
+import { BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common/exceptions';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class PokemonService {
@@ -30,8 +27,16 @@ export class PokemonService {
     }
   }
 
-  findAll() {
-    return `This action returns all pokemon`;
+  findAll(paginationDto: PaginationDto) {
+    const { limit = 10, offset = 0 } = paginationDto;
+    return this.pokemonModel
+      .find()
+      .limit(limit)
+      .skip(offset)
+      .sort({
+        no: 1,
+      })
+      .select('-__v');
   }
 
   async findOne(term: string) {
@@ -52,10 +57,7 @@ export class PokemonService {
       });
     }
 
-    if (!pokemon)
-      throw new NotFoundException(
-        `Pokemon wit id, name or no "${term}" not found `,
-      );
+    if (!pokemon) throw new NotFoundException(`Pokemon wit id, name or no "${term}" not found `);
 
     return pokemon;
   }
@@ -63,8 +65,7 @@ export class PokemonService {
   async update(term: string, updatePokemonDto: UpdatePokemonDto) {
     const pokemon = await this.findOne(term);
 
-    if (updatePokemonDto.name)
-      updatePokemonDto.name = updatePokemonDto.name.toLocaleLowerCase();
+    if (updatePokemonDto.name) updatePokemonDto.name = updatePokemonDto.name.toLocaleLowerCase();
 
     try {
       await pokemon.updateOne(updatePokemonDto, {
@@ -91,13 +92,9 @@ export class PokemonService {
 
   private handleException(error: any) {
     if (error.code === 11000) {
-      throw new BadRequestException(
-        `Pokemon exist in db ${JSON.stringify(error.keyValue)}`,
-      );
+      throw new BadRequestException(`Pokemon exist in db ${JSON.stringify(error.keyValue)}`);
     }
     console.log(error);
-    throw new InternalServerErrorException(
-      `Pokemon exist in db ${JSON.stringify(error.keyValue)}`,
-    );
+    throw new InternalServerErrorException(`Pokemon exist in db ${JSON.stringify(error.keyValue)}`);
   }
 }

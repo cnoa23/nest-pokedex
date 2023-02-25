@@ -19,6 +19,8 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3000);
+  // works to get the port assigned by Heroku deploy
+  await app.listen(process.env.PORT);
+  console.log(`App running on port ${process.env.PORT}`);
 }
 bootstrap();
